@@ -37,8 +37,10 @@ public class ProjectViewController implements Initializable {
 
     @FXML
     private CheckBox onlyShowAssigned;
-    @FXML private TextField fieldSearch;
-    @FXML private TableColumn<Project, String> projectName, projectAddress, projectPostalCode, customerName,  docCount, createdAt;
+    @FXML
+    private TextField fieldSearch;
+    @FXML
+    private TableColumn<Project, String> projectName, projectAddress, projectPostalCode, customerName, docCount, createdAt;
     @FXML
     private HBox buttonsHBox;
 
@@ -95,7 +97,13 @@ public class ProjectViewController implements Initializable {
             pauseTransition.playFromStart();
         });
 
-        onlyShowAssigned.selectedProperty().addListener(((observable, oldValue, newValue) -> filterProjects()));
+
+        if (!LoggedInUserState.getInstance().getLoggedInUser().hasRole(DefaultRoles.PROJECTMANAGER) || !LoggedInUserState.getInstance().getLoggedInUser().hasRole(DefaultRoles.SALESPERSON)) {
+            onlyShowAssigned.setDisable(true);
+            onlyShowAssigned.setVisible(false);
+        } else {
+            onlyShowAssigned.selectedProperty().addListener(((observable, oldValue, newValue) -> filterProjects()));
+        }
     }
 
     private void setNewProjectBtn() {
@@ -127,14 +135,14 @@ public class ProjectViewController implements Initializable {
 
         LocalDate now = LocalDate.now();
 
-        for (var v : projectModel.getProjectObservableList()){
+        for (var v : projectModel.getProjectObservableList()) {
 
-            if (v.getCreatedAt().toLocalDateTime().isBefore(now.minusMonths(48).atStartOfDay())){
+            if (v.getCreatedAt().toLocalDateTime().isBefore(now.minusMonths(48).atStartOfDay())) {
                 oldProjects.add(v);
             }
         }
 
-        if (!oldProjects.isEmpty())openOldProjectPop(oldProjects);
+        if (!oldProjects.isEmpty()) openOldProjectPop(oldProjects);
     }
 
     /**
@@ -156,7 +164,7 @@ public class ProjectViewController implements Initializable {
 
             var result = controller.getResult();
 
-            if(result == null) return;
+            if (result == null) return;
 
             projectModel.createProject(result);
 
@@ -168,6 +176,7 @@ public class ProjectViewController implements Initializable {
 
     /**
      * Open project and sets it in center view
+     *
      * @param project project that should be opened
      */
     private void openProject(Project project) {
@@ -181,6 +190,7 @@ public class ProjectViewController implements Initializable {
 
     /**
      * open assignTechVIew in a pop-up box
+     *
      * @param project project technicians should be assigned to
      */
     private void assignTechnicians(Project project) {
@@ -225,6 +235,7 @@ public class ProjectViewController implements Initializable {
 
     /**
      * Set doubleClick to open a doc on the project Tableview
+     *
      * @param mouseEvent click from mouse on an item in table
      */
     public void openItem(MouseEvent mouseEvent) {
@@ -242,22 +253,22 @@ public class ProjectViewController implements Initializable {
         filteredList.setPredicate(project -> {
             // This must be first
             boolean isAssignedToUser = project.getAssignedTechnicians().contains(LoggedInUserState.getInstance().getLoggedInUser());
-            if(onlyShowAssigned.isSelected() && !isAssignedToUser) return false;
+            if (onlyShowAssigned.isSelected() && !isAssignedToUser) return false;
 
             boolean containsProjectName = project.getName().toLowerCase().contains(filterString);
-            if(containsProjectName) return true;
+            if (containsProjectName) return true;
 
             boolean containsCustomerName = project.getCustomer().getName().toLowerCase().contains(filterString);
-            if(containsCustomerName) return true;
+            if (containsCustomerName) return true;
 
             boolean containsPostalCode = project.getPostalCode().contains(filterString);
-            if(containsPostalCode) return true;
+            if (containsPostalCode) return true;
 
             boolean containsProjectAddress = project.getAddress().toLowerCase().contains(filterString);
-            if(containsProjectAddress) return true;
+            if (containsProjectAddress) return true;
 
             boolean containsDocumentationName = project.getDocumentations().stream().anyMatch(d -> d.getName().toLowerCase().contains(filterString));
-            if(containsDocumentationName) return true;
+            if (containsDocumentationName) return true;
 
             return false;
         });
